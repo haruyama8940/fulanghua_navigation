@@ -51,7 +51,7 @@ private:
   decltype(waypoints_)::iterator current_waypoint_;
   std::string robot_frame_, world_frame_;
   std::string filename_;
-  geometry_msgs::Twist::ConstPtr& nav_vel_msg;
+  geometry_msgs::Twist nav_vel_msg;
   bool loop_flg_;
   bool suspend_flg_;
   double dist_err_;
@@ -96,6 +96,7 @@ WaypointNav::WaypointNav() :
   function_map_.insert(std::make_pair("suspend", std::bind(&WaypointNav::suspend, this)));
 
   visualization_wp_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("visualization_wp", 1);
+  nav_vel_pub = nh_.advertise<geometry_msgs::Twist>("nav_vel", 1);
   cmd_vel_sub_ = nh_.subscribe("cmd_vel", 1, &WaypointNav::cmdVelCallback, this);//cmd_vel or icart_mini/cmd_vel
   start_server_ = nh_.advertiseService("start_wp_nav", &WaypointNav::startNavigationCallback, this);
   suspend_server_ = nh_.advertiseService("suspend_wp_nav", &WaypointNav::suspendNavigationCallback, this);
@@ -369,7 +370,7 @@ void WaypointNav::suspend(){
 }
 void WaypointNav::change_mode(){
   //cmd_vel受け取って,nav_velとしてリマップして渡す
-  nav_vel_pub = nh_.advertise<geometry_msgs::Twist>("nav_vel", 1);
+  
   nav_vel_pub.publish(nav_vel_msg); 
 }
 
