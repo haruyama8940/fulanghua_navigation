@@ -20,7 +20,8 @@
 #include <math.h>
 #include <fstream>
 #include <iostream>
-
+#include <memory>
+using namespace::std;
 typedef struct Waypoints{
   geometry_msgs::Pose pose;
   std::string function;// 文字列リテラルyamlのfunc定義
@@ -37,10 +38,10 @@ public:
   void run_wp();
   bool on_wp();
   void send_wp();
-  void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_vel_msg);
+  void cmdVelCallback(const geometry_msgs::Twist::Ptr& cmd_vel_msg);
   bool startNavigationCallback(std_srvs::Trigger::Request &request, std_srvs::Trigger::Response &response);
   bool suspendNavigationCallback(std_srvs::Trigger::Request &request, std_srvs::Trigger::Response &response);
-  
+  boost::shared_ptr<geometry_msgs::Twist> nav_vel_msg;
 // declear functions which is called by depending on "function" in yaml
   void run();
   void suspend();
@@ -51,7 +52,7 @@ private:
   decltype(waypoints_)::iterator current_waypoint_;
   std::string robot_frame_, world_frame_;
   std::string filename_;
-  geometry_msgs::Twist nav_vel_msg;
+  
   bool loop_flg_;
   bool suspend_flg_;
   double dist_err_;
@@ -274,7 +275,7 @@ void WaypointNav::send_wp(){
   last_moved_time_ = ros::Time::now().toSec();
 }
 
-void WaypointNav::cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_vel_msg){
+void WaypointNav::cmdVelCallback(const geometry_msgs::Twist::Ptr& cmd_vel_msg){
   if(cmd_vel_msg->linear.x > -0.001 && cmd_vel_msg->linear.x < 0.001  &&
     cmd_vel_msg->linear.y > -0.001 && cmd_vel_msg->linear.y < 0.001   &&
     cmd_vel_msg->linear.z > -0.001 && cmd_vel_msg->linear.z < 0.001   &&
@@ -371,7 +372,7 @@ void WaypointNav::suspend(){
 void WaypointNav::change_mode(){
   //cmd_vel受け取って,nav_velとしてリマップして渡す
   
-  nav_vel_pub.publish(nav_vel_msg); 
+  nav_vel_pub.publish(nav_vel_msg);
 }
 
 int main(int argc, char** argv){
